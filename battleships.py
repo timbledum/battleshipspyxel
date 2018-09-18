@@ -1,3 +1,15 @@
+"""Battleships!
+
+To do:
+
+- [ ] Create game loop / class
+- [ ] Create input functionality
+- [ ] Create win condition
+- [ ] Create display that doesn't show ships
+- [ ] Document functions
+
+
+"""
 from string import ascii_uppercase
 from random import randint, choice
 from itertools import cycle
@@ -39,16 +51,17 @@ class Board:
                 if orientation == "V":
                     ship_positions = [(c, r) for r, c in ship_positions]
                 
+                # Check whether position overlaps existing ship
                 collision = False
                 for r, c in ship_positions:
                     if self.board[r][c] == SHIP:
                         collision = True
                         break
                 
+                # Create ship onto board if position valid
                 if not collision:
                     for r, c in ship_positions:
                         self.board[r][c] = SHIP
-
 
 
     def guess_position(self, position):
