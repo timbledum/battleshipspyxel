@@ -77,22 +77,38 @@ class Board:
         return result
 
 
-    def display(self):
+    def print_rows(self, show_ships=True):
+        """Return a generator that produces the rows in the board."""
+
         seperator_length = len(SEPERATOR) + 1
         column_headers = "".join([str(i).ljust(seperator_length) for i in range(1, self.size + 1)])
-        print("  ", column_headers) 
+        yield "   " + column_headers
+
         for row_index, row in enumerate(self.board):
             row_letter = ascii_uppercase[row_index]
             row_text = ""
             for column in row:
-                row_text += column + SEPERATOR
-            print(row_letter + " ", row_text)
+                if column == SHIP and not show_ships:
+                    row_text += EMPTY + SEPERATOR
+                else:
+                    row_text += column + SEPERATOR
+
+            yield row_letter + "  " + row_text
+
+
+    def display(self, show_ships=True):
+        for row in self.print_rows(show_ships):
+            print(row)
 
     @staticmethod
     def convert_position(position):
-        row, column = position
+        """Convert position from 'C6' notation to (2, 5) format."""
+        row = position[0]
+        column = position[1:]
+
         row_number = ascii_uppercase.index(row)
         column_number = int(column) - 1
+    
         return (row_number, column_number)
 
 if __name__ == "__main__":
