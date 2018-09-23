@@ -2,8 +2,8 @@
 
 To do:
 
-- [ ] Create game loop / class
-- [ ] Create input functionality
+- [x] Create game loop / class
+- [x] Create input functionality
 - [ ] Create win condition
 - [ ] Create display that doesn't show ships
 - [ ] Document functions
@@ -25,6 +25,7 @@ SHIP = colorful.blue("S")
 HIT = colorful.red("H")
 MISS = colorful.violet("M")
 SEPERATOR = "  "
+BOARD_SEPERATOR = colorful.cyan("  --|--  ")
 
 PROMPT = colorful.orange(">>> ")
 
@@ -32,10 +33,14 @@ START_SHIPS = [2, 2, 4, 4, 5]
 
 
 def clear_screen():
+    """Clear the screen."""
+
     print("\n" * 100)
 
 
 def center(text, width=LINE_LENGTH):
+    """Centre colorful strings."""
+
     length = len(text)
     start = (width - length) // 2
     end = width - length - start
@@ -45,11 +50,21 @@ def center(text, width=LINE_LENGTH):
 
 class Board:
     def __init__(self, size):
+        """Set up key variables."""
+
         self.size = size
         self.board = [[EMPTY for _ in range(size)] for _ in range(size)]
 
+    def is_on_board(self, position):
+        """Return True if the position is on the board."""
+        for coordinate in position:
+            if 0 < coordinate < self.size:
+                return True
+        return False
+
     def is_ship_on_board(self, ship_start, ship_length, orientation):
-        """Return yes if ship fits on the board."""
+        """Return True if ship fits on the board."""
+
         row, column = ship_start
 
         if orientation == "H":
@@ -63,14 +78,14 @@ class Board:
         if long + ship_length > self.size:
             return False
 
-
         for direction in ship_start:
             if direction < 0:
                 return False
-        
+
         return True
 
-    def generate_ship(self, ship_start, ship_length, orientation):
+    @staticmethod
+    def generate_ship(ship_start, ship_length, orientation):
         """Generate a ship as a list of coordinates."""
 
         row, column = ship_start
@@ -104,9 +119,15 @@ class Board:
         for r, c in ship_positions:
             self.board[r][c] = EMPTY
 
+    def is_guessed(self, position):
+        """Return True if the position has already been guessed."""
+        r, c = position
+        return self.board[r][c] in [MISS, HIT]
+
     def guess_position(self, position):
         """Accepts game position and updates board. Also return hit/miss."""
-        row, column = self.convert_position(position)
+
+        row, column = position
         current_status = self.board[row][column]
         if current_status in (SHIP, HIT):
             result = HIT
@@ -137,8 +158,18 @@ class Board:
             yield row_letter + "  " + row_text
 
     def display(self, show_ships=True):
+        """Display the board."""
+
         for row in self.print_rows(show_ships):
             print(row)
+
+    def all_ships_sunk(self):
+        """Return True if all ships have been sunk."""
+
+        for row in self.board:
+            if SHIP in row:
+                return False
+        return True
 
     @staticmethod
     def convert_position(position):
@@ -154,6 +185,7 @@ class Board:
 
 class Game:
     def __init__(self):
+        """Set up key variables and play the game."""
 
         # Set up the variables
         self.players = "AB"
@@ -165,12 +197,19 @@ class Game:
 
         # Set up the players
         for player in self.players:
-            self.set_up(player)
+            pass
+            #self.set_up(player)
+
+        self.demo_setup()
 
         # Play the game
         for player in cycle(self.players):
             if self.round(player):
                 break
+
+        winning_player = colorful.magenta(self.player_names[player])
+        print(winning_player + " is the " + colorful.red("WINNER!!!"))
+        input()
 
     def welcome(self):
         """Print the initial input screen and wait for initial input."""
@@ -179,13 +218,21 @@ class Game:
 
         text = (
             ("#" * LINE_LENGTH + "\n" * 2)
-            + center(colorful.base02("Welcome to ") + colorful.green("battleships") + colorful.base02("!!!"))
+            + center(
+                colorful.base02("Welcome to ")
+                + colorful.green("battleships")
+                + colorful.base02("!!!")
+            )
             + "\n"
             + ""
             + "\n"
             + center(colorful.base02("A game of ") + colorful.red("naval battles"))
             + "\n"
-            + center(colorful.base02("and ") + colorful.blue("sea adventures") + colorful.base02("."))
+            + center(
+                colorful.base02("and ")
+                + colorful.blue("sea adventures")
+                + colorful.base02(".")
+            )
             + "\n"
             + "\n"
             + "\n"
@@ -202,8 +249,13 @@ class Game:
         print(text)
         input()
 
+    ####################
+    # Set up the board #
+    ####################
+
     def set_up(self, player):
         """Allow the players to set up their screens."""
+
         clear_screen()
         board = self.boards[player]
 
@@ -216,7 +268,6 @@ class Game:
 
         for number, ship in enumerate(self.ships, start=1):
             self.set_ship(player, ship, number)
-
 
     def set_ship(self, player, ship, number):
         """Set up one ship, including validating input."""
@@ -243,12 +294,12 @@ class Game:
                 self.print_error("The start position is invalid.")
                 continue
 
-            if not board.is_ship_on_board(start_position, ship, orientation):
-                self.print_error("Some of the ship would fall outside of the board.")
-                continue
-
             if orientation not in "HV" and orientation is not "HV":
                 self.print_error("The orientation entered is not either H or V.")
+                continue
+
+            if not board.is_ship_on_board(start_position, ship, orientation):
+                self.print_error("Some of the ship would fall outside of the board.")
                 continue
 
             ship_positions = board.generate_ship(start_position, ship, orientation)
@@ -273,8 +324,87 @@ class Game:
         print(colorful.red("Error ") + colorful.base02(f"- {error} Please try again."))
         input()
 
+    #################
+    # Play the game #
+    #################
+
     def round(self, player):
-        return True
+        """Go through one round of battleships."""
+
+        player_name = colorful.violet(self.player_names[player])
+        other_player = self.players.replace(player, "")
+
+        board = self.boards[player]
+        other_board = self.boards[other_player]
+
+        clear_screen()
+        input(f"Pass the computer to {player_name}. Hit ENTER when ready.")
+
+        print(f"Hello {player_name}.")
+
+        while True:
+            self.display_both_boards(player)
+
+            print("Please enter your guess.")
+            guess = input(PROMPT).upper()
+
+            try:
+                guess_position = other_board.convert_position(guess)
+            except BaseException:
+                self.print_error("The position entered is invalid.")
+                continue
+
+            if not other_board.is_on_board(guess_position):
+                self.print_error("The guess is outside of the board.")
+                continue
+
+            if other_board.is_guessed(guess_position):
+                self.print_error("This position has already been guessed.")
+                continue
+
+            result = other_board.guess_position(guess_position)
+
+            if result == HIT:
+                print(colorful.green("You hit a ship! :)"))
+                input()
+                if other_board.all_ships_sunk():
+                    return True
+            elif result == MISS:
+                print(colorful.blue("You missed any ships... :'("))
+                input()
+                break
+
+        else:
+            return False
+
+    def display_both_boards(self, player):
+        """Display the current board on the left and the other board on the right."""
+
+        other_player = self.players.replace(player, "")
+
+        this_board_display = self.boards[player].print_rows(show_ships=True)
+        other_board_display = self.boards[other_player].print_rows(show_ships=False)
+
+        player_name = self.player_names[player]
+        other_player_name = self.player_names[other_player]
+
+        player_header = center(colorful.blue(player_name))
+        other_player_header = center(colorful.red(other_player_name))
+
+        print(player_header + (" " * len(BOARD_SEPERATOR)) + other_player_header)
+
+        for this_board, other_board in zip(this_board_display, other_board_display):
+            print(this_board + BOARD_SEPERATOR + other_board)
+
+
+    def demo_setup(self):
+        self.player_names = {"A": "Marcus", "B": "Rose"}
+
+        self.boards["A"].place_ship(self.boards["A"].generate_ship((1,1), 4, "H"))
+        self.boards["A"].place_ship(self.boards["A"].generate_ship((2,1), 4, "H"))
+
+        self.boards["B"].place_ship(self.boards["B"].generate_ship((1,1), 4, "H"))
+        self.boards["B"].place_ship(self.boards["B"].generate_ship((2,1), 4, "H"))
 
 
 if __name__ == "__main__":
