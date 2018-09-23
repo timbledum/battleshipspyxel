@@ -4,21 +4,24 @@ To do:
 
 - [x] Create game loop / class
 - [x] Create input functionality
-- [ ] Create win condition
-- [ ] Create display that doesn't show ships
-- [ ] Document functions
+- [X] Create win condition
+- [X] Create display that doesn't show ships
+- [X] Document functions
+- [x] Decrease size
+- [x] Increase ships
+- [ ] Feedback if full ship sunk
+- [ ] Feedback previous guess from previous player
 
 
 """
-from string import ascii_uppercase
-from random import randint, choice
 from itertools import cycle
-from textwrap import dedent
+from string import ascii_uppercase
+import sys
 import colorful
 
 colorful.use_style("solarized")
 
-SIZE = 10
+SIZE = 9
 LINE_LENGTH = (SIZE * 3) + 3
 EMPTY = "-"
 SHIP = colorful.blue("S")
@@ -29,7 +32,7 @@ BOARD_SEPERATOR = colorful.cyan("  --|--  ")
 
 PROMPT = colorful.orange(">>> ")
 
-START_SHIPS = [2, 2, 4, 4, 5]
+START_SHIPS = [7, 5, 5, 4, 4, 3, 2]
 
 
 def clear_screen():
@@ -195,14 +198,12 @@ class Game:
 
         self.welcome()
 
-
         # Set up the players
         if testing:
             self.demo_setup()
         else:
             for player in self.players:
                 self.set_up(player)
-
 
         # Play the game
         for player in cycle(self.players):
@@ -398,17 +399,19 @@ class Game:
         for this_board, other_board in zip(this_board_display, other_board_display):
             print(this_board + BOARD_SEPERATOR + other_board)
 
-
     def demo_setup(self):
         """Demo game for testing player turns."""
         self.player_names = {"A": "Marcus", "B": "Rose"}
 
-        self.boards["A"].place_ship(self.boards["A"].generate_ship((1,1), 4, "H"))
-        self.boards["A"].place_ship(self.boards["A"].generate_ship((2,1), 4, "H"))
+        self.boards["A"].place_ship(self.boards["A"].generate_ship((1, 1), 4, "H"))
+        self.boards["A"].place_ship(self.boards["A"].generate_ship((2, 1), 4, "H"))
 
-        self.boards["B"].place_ship(self.boards["B"].generate_ship((1,1), 4, "H"))
-        self.boards["B"].place_ship(self.boards["B"].generate_ship((2,1), 4, "H"))
+        self.boards["B"].place_ship(self.boards["B"].generate_ship((1, 1), 4, "H"))
+        self.boards["B"].place_ship(self.boards["B"].generate_ship((2, 1), 4, "H"))
 
 
 if __name__ == "__main__":
-    Game()
+    if "test" in sys.argv:
+        Game(True)
+    else:
+        Game()
