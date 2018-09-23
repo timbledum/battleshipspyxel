@@ -184,7 +184,7 @@ class Board:
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, testing=False):
         """Set up key variables and play the game."""
 
         # Set up the variables
@@ -195,12 +195,14 @@ class Game:
 
         self.welcome()
 
-        # Set up the players
-        for player in self.players:
-            pass
-            #self.set_up(player)
 
-        self.demo_setup()
+        # Set up the players
+        if testing:
+            self.demo_setup()
+        else:
+            for player in self.players:
+                self.set_up(player)
+
 
         # Play the game
         for player in cycle(self.players):
@@ -398,6 +400,7 @@ class Game:
 
 
     def demo_setup(self):
+        """Demo game for testing player turns."""
         self.player_names = {"A": "Marcus", "B": "Rose"}
 
         self.boards["A"].place_ship(self.boards["A"].generate_ship((1,1), 4, "H"))
