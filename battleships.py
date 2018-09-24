@@ -11,6 +11,7 @@ To do:
 - [x] Increase ships
 - [ ] Feedback if full ship sunk
 - [ ] Feedback previous guess from previous player
+- [ ] Show current status (either hit rate or ships sunk).
 
 
 """
@@ -18,7 +19,9 @@ from itertools import cycle
 import sys
 import colorful
 from board import Board
-from const import LINE_LENGTH, START_SHIPS, SIZE, PROMPT, HIT, MISS, SHIP, EMPTY, BOARD_SEPERATOR
+from const import LINE_LENGTH, START_SHIPS, SIZE, PROMPT
+from const import HIT, MISS, SUNK, SHIP, EMPTY, BOARD_SEPERATOR
+from const import Point, Ship
 
 colorful.use_style("solarized")
 
@@ -37,7 +40,6 @@ def center(text, width=LINE_LENGTH):
     end = width - length - start
     output = (" " * start) + text + (" " * end)
     return output
-
 
 
 class Game:
@@ -221,8 +223,12 @@ class Game:
 
             result = other_board.guess_position(guess_position)
 
-            if result == HIT:
-                print(colorful.green("You hit a ship! :)"))
+            if result == HIT or result == SUNK:
+                if result == HIT:
+                    print(colorful.green("You hit a ship! :)"))
+                elif result == SUNK:
+                    print(colorful.magenta("You SUNK a ship! :)"))
+
                 input()
                 if other_board.all_ships_sunk():
                     return True
@@ -257,11 +263,9 @@ class Game:
         """Demo game for testing player turns."""
         self.player_names = {"A": "Marcus", "B": "Rose"}
 
-        self.boards["A"].place_ship(self.boards["A"].generate_ship((1, 1), 4, "H"))
-        self.boards["A"].place_ship(self.boards["A"].generate_ship((2, 1), 4, "H"))
-
-        self.boards["B"].place_ship(self.boards["B"].generate_ship((1, 1), 4, "H"))
-        self.boards["B"].place_ship(self.boards["B"].generate_ship((2, 1), 4, "H"))
+        for player in self.players:
+            self.boards[player].place_ship(Ship((1, 1), 4, "H"))
+            self.boards[player].place_ship(Ship((2, 1), 4, "H"))
 
 
 if __name__ == "__main__":
