@@ -58,7 +58,7 @@ class Board:
 
         return ship_positions
 
-    def check_ship_collisions(self, ship):  # TODO
+    def check_ship_collisions(self, ship):
         """Check if the current ship overlaps any other ships."""
 
         for other_ship in self.ships:
@@ -72,7 +72,7 @@ class Board:
         """Place the current ship on the board."""
         self.ships[ship] = ship.length
 
-    def delete_recent_ship(self, ship):
+    def delete_ship(self, ship):
         """Delete the current ship from the board."""
         del self.ships[ship]
 

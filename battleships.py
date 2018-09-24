@@ -1,5 +1,12 @@
 """Battleships!
 
+This is the mighty game of battleships in text format.
+
+First, each player sets up the board, then take turns to find
+each other's ships!
+
+Created by Marcus Croucher in 2018.
+
 To do:
 
 - [x] Create game loop / class
@@ -9,9 +16,9 @@ To do:
 - [X] Document functions
 - [x] Decrease size
 - [x] Increase ships
-- [ ] Feedback if full ship sunk
-- [ ] Feedback previous guess from previous player
-- [ ] Show current status (either hit rate or ships sunk).
+- [x] Feedback if full ship sunk
+- [x] Feedback previous guess from previous player
+- [x] Show current status (either hit rate or ships sunk).
 
 
 """
@@ -135,10 +142,12 @@ class Game:
 
         while True:
             board.display()
+
             print(
-                "\nHere is your board."
+                "\nHere is your board!"
                 + f"\nShip number {number} is "
                 + SHIP * ship
+                + f" (length: {ship})"
                 + "\nEnter the start point of the ship (i.e., A1)"
             )
             start_point = input(PROMPT).upper()
@@ -153,26 +162,26 @@ class Game:
                 self.print_error("The start position is invalid.")
                 continue
 
-            if orientation not in "HV" and orientation is not "HV":
+            if orientation != "H" and orientation != "V":
                 self.print_error("The orientation entered is not either H or V.")
                 continue
 
-            if not board.is_ship_on_board(start_position, ship, orientation):
+            current_ship = Ship(start_position, ship, orientation)
+
+            if not board.is_ship_on_board(current_ship):
                 self.print_error("Some of the ship would fall outside of the board.")
                 continue
 
-            ship_positions = board.generate_ship(start_position, ship, orientation)
-
-            if board.check_ship_collisions(ship_positions):
+            if board.check_ship_collisions(current_ship):
                 self.print_error("The ship entered collides with another ship.")
                 continue
 
-            board.place_ship(ship_positions)
+            board.place_ship(current_ship)
             board.display()
 
             print("Would you like to keep the ship? (C) for confirm.")
             if input(PROMPT).upper() != "C":
-                board.delete_ship(ship_positions)
+                board.delete_ship(current_ship)
                 continue
             else:
                 break
@@ -248,11 +257,18 @@ class Game:
         this_board_display = self.boards[player].print_rows(show_ships=True)
         other_board_display = self.boards[other_player].print_rows(show_ships=False)
 
-        player_name = self.player_names[player]
-        other_player_name = self.player_names[other_player]
+        text_template = "{}  | Score: {}"
 
-        player_header = center(colorful.blue(player_name))
-        other_player_header = center(colorful.red(other_player_name))
+        player_text = text_template.format(
+            self.player_names[player], self.boards[other_player].hits
+        )
+
+        other_player_text = text_template.format(
+            self.player_names[other_player], self.boards[player].hits
+        )
+
+        player_header = center(colorful.blue(player_text))
+        other_player_header = center(colorful.red(other_player_text))
 
         print(player_header + (" " * len(BOARD_SEPERATOR)) + other_player_header)
 
