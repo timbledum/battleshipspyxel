@@ -208,6 +208,7 @@ class Game:
         clear_screen()
         input(f"Pass the computer to {player_name}. Hit ENTER when ready.")
 
+        clear_screen()
         print(f"Hello {player_name}.")
 
         while True:
